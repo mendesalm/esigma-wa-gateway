@@ -48,12 +48,34 @@ jobs:
               cp .env.example .env
               GEN_KEY=$(openssl rand -hex 24)
               sed -i "s/^WA_GATEWAY_KEY=.*/WA_GATEWAY_KEY=${GEN_KEY}/" .env
-              echo "Arquivo .env criado. Verifique a porta em WA_GATEWAY_PORT (padrão 8004)."
+              echo "Arquivo .env criado."
             fi
 
-            PORTA_GW=$(grep -E '^WA_GATEWAY_PORT=' .env | cut -d'=' -f2 || true)
-            PORTA_GW=${PORTA_GW:-8004}
-            echo "Verificando porta ${PORTA_GW} na VPS:"
-            ss -tulpn | grep ":${PORTA_GW} " || echo "Porta ${PORTA_GW} livre."
+            npm install --omit=dev
 
-            docker compose up -d --build
+            NODE_BIN=$(command -v node)
+            echo "Usando Node em: $NODE_BIN ($($NODE_BIN -v))"
+
+            sudo tee /etc/systemd/system/esigma-wa-gateway.service > /dev/null <<EOF
+            [Unit]
+            Description=e-Sigma WhatsApp Gateway (Baileys)
+            After=network.target
+
+            [Service]
+            Type=simple
+            User=$(whoami)
+            WorkingDirectory=$APP_DIR
+            EnvironmentFile=$APP_DIR/.env
+            ExecStart=$NODE_BIN $APP_DIR/src/server.js
+            Restart=always
+            RestartSec=5
+
+            [Install]
+            WantedBy=multi-user.target
+            EOF
+
+            sudo systemctl daemon-reload
+            sudo systemctl enable esigma-wa-gateway
+            sudo systemctl restart esigma-wa-gateway
+            sleep 2
+            curl -sf http://127.0.0.1:8004/health
