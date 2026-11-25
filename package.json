@@ -1,0 +1,20 @@
+{
+  "name": "esigma-wa-gateway",
+  "version": "1.0.0",
+  "description": "Microsserviço multi-tenant de gateway WhatsApp (Baileys) para o ecossistema e-Sigma / Lojas",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test tests/gateway.test.js"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^7.0.0-rc14",
+    "express": "^4.21.2",
+    "pino": "^9.6.0",
+    "qrcode": "^1.5.4"
+  }
+}
